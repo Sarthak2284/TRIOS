@@ -14,10 +14,12 @@ def listen():
     """Listen to user input via microphone and return recognized text."""
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
-        print("Listening...")
+        print("Listening... Please speak a command.")
         try:
-            audio = recognizer.listen(source, timeout=5)
-            command = recognizer.recognize_google(audio).lower()
+            # Adjust for ambient noise and listen for a command
+            recognizer.adjust_for_ambient_noise(source)
+            audio = recognizer.listen(source, timeout=10)  # Increase timeout for better results
+            command = recognizer.recognize_google(audio, language="en-US", show_all=False).lower()
             print(f"You said: {command}")
             return command
         except sr.UnknownValueError:
@@ -26,6 +28,9 @@ def listen():
         except sr.RequestError:
             speak("There seems to be an issue with the speech service.")
             return None
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
 
 def main():
     """Main function to run TRIOS."""
@@ -33,6 +38,7 @@ def main():
     while True:
         command = listen()
         if command:
+            # Process recognized command
             if "your name" in command:
                 speak("My name is TRIOS, your personal assistant.")
             elif "how are you" in command:
@@ -43,7 +49,7 @@ def main():
             else:
                 speak("I can only respond to basic commands right now. Please try asking something else.")
         else:
-            # If command is None, continue listening
+            # Continue listening without repeating any unnecessary prompts
             continue
 
 if __name__ == "__main__":
